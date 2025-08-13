@@ -1,13 +1,18 @@
-import Image from "next/image";
-import React from "react";
+// components/Sky.tsx
+import Stars from "@/components/Stars";
 import Moon from "@/components/Moon";
 
-export default function Sky() {
+export default function Sky({ onMoonClick }: { onMoonClick?: () => void }) {
   return (
-    <div className="sky bg-gradient-to-t from-blue-800 via-blue-950 to-slate-950 h-screen w-full flex items-center justify-center">
-      <div className="top-[12%] motion-safe:animate-[float_4s_ease-in-out_infinite] rounded-full absolute top-[10%] right-[12%] drop-shadow-[0_0_20px_rgba(0,255,255,075)]">
+    <section className="relative h-screen w-full overflow-hidden bg-gradient-to-t from-blue-800 via-blue-950 to-slate-950">
+      <Stars />
+      <div
+        className="absolute top-[10%] right-[12%] z-10 cursor-pointer motion-safe:animate-[float_6s_ease-in-out_infinite] rounded-full drop-shadow-[0_0_20px_rgba(0,255,255,0.75)]"
+        onClick={onMoonClick}
+        title="Flip to sunrise"
+      >
         <Moon />
       </div>
-    </div>
+    </section>
   );
 }
