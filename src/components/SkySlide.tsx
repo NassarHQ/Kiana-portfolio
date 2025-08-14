@@ -1,11 +1,12 @@
 "use client";
 import React, { useRef } from "react";
+import { gloria } from "@/app/fonts";
+import { playwriteQLD } from "@/app/fonts";
 import {
   motion,
   useScroll,
   useTransform,
   useMotionTemplate,
-  AnimatePresence, // (kept; not required, but safe to leave)
 } from "framer-motion";
 
 /* =============================== Stars =================================== */
@@ -48,8 +49,12 @@ const Stars = () => {
 };
 
 /* ================================ Moon =================================== */
-const Moon = () => (
-  <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+const Moon = ({ className = "" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 140 140"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <defs>
       <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="#a7f3f3" stopOpacity="0.6" />
@@ -69,8 +74,12 @@ const Moon = () => (
 );
 
 /* ================================= Sun =================================== */
-const Sun = () => (
-  <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+const Sun = ({ className = "" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 180 180"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <defs>
       <radialGradient id="sunCore" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="#fff6cc" />
@@ -100,7 +109,88 @@ const Sun = () => (
   </svg>
 );
 
-/* ===================== Helpers for the typing title ======================= */
+/* =============================== Clouds ================================== */
+const CloudSVG = ({ opacity = 0.9 }: { opacity?: number }) => (
+  <svg
+    viewBox="0 0 120 60"
+    width="100%"
+    height="100%"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <ellipse cx="50" cy="38" rx="38" ry="18" fill="white" opacity={opacity} />
+    <ellipse cx="28" cy="34" rx="16" ry="12" fill="white" opacity={opacity} />
+    <ellipse cx="46" cy="26" rx="18" ry="14" fill="white" opacity={opacity} />
+    <ellipse cx="70" cy="30" rx="20" ry="14" fill="white" opacity={opacity} />
+    <ellipse cx="90" cy="36" rx="16" ry="12" fill="white" opacity={opacity} />
+  </svg>
+);
+
+const Clouds = () => {
+  const clouds = [
+    {
+      top: "26%",
+      right: "4%",
+      w: 170,
+      h: 78,
+      duration: 65,
+      opacity: 0.9,
+      scale: 1.0,
+      hideOnMobile: true,
+    },
+    {
+      top: "14%",
+      right: "10%",
+      w: 135,
+      h: 62,
+      duration: 52,
+      opacity: 0.85,
+      scale: 0.9,
+      hideOnMobile: true,
+    },
+    {
+      top: "20%",
+      right: "2%",
+      w: 200,
+      h: 90,
+      duration: 74,
+      opacity: 0.92,
+      scale: 1.1,
+      hideOnMobile: false,
+    },
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none z-20">
+      {clouds.map((c, i) => (
+        <motion.div
+          key={i}
+          className={`${c.hideOnMobile ? "hidden md:block" : ""} absolute`}
+          style={{
+            top: c.top,
+            right: c.right,
+            width: c.w,
+            height: c.h,
+            scale: c.hideOnMobile ? c.scale : 0.85,
+            opacity: c.opacity,
+            filter: "blur(0.3px)",
+          }}
+          initial={{ x: "0vw" }}
+          animate={{ x: ["0vw", "-120vw"] }}
+          transition={{
+            repeat: Infinity,
+            repeatType: "loop",
+            ease: "linear",
+            duration: c.duration,
+          }}
+        >
+          <CloudSVG opacity={c.opacity} />
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+/* ===================== TypedTitle helpers ================================ */
 function useInterval(callback: () => void, delayMs: number | null) {
   const saved = React.useRef(callback);
   React.useEffect(() => {
@@ -125,23 +215,13 @@ const Caret = () => (
   </motion.span>
 );
 
-/**
- * TypedTitle — loops forever:
- * 1) type EN
- * 2) hold
- * 3) overwrite to JP (char-by-char)
- * 4) hold
- * 5) overwrite back to EN
- * No fades; efficient single interval.
- * Props kept compatible with your usage (stepMs, pauseMs, startDelayMs).
- */
 const TypedTitle: React.FC<{
   english: string;
   japanese: string;
   className?: string;
-  stepMs?: number;       // speed per char
-  pauseMs?: number;      // pause after finishing each phase
-  startDelayMs?: number; // initial delay before typing starts
+  stepMs?: number;
+  pauseMs?: number;
+  startDelayMs?: number;
 }> = ({
   english,
   japanese,
@@ -158,31 +238,21 @@ const TypedTitle: React.FC<{
   const jp = japanese;
   const maxLen = Math.max(en.length, jp.length);
 
-  // initial delay before typing starts
   React.useEffect(() => {
     if (!startDelayMs) return;
     const t = setTimeout(() => void 0, startDelayMs);
     return () => clearTimeout(t);
   }, [startDelayMs]);
 
-  // compute text for the current phase/index
   let text = "";
-  if (phase === "TYPE_EN") {
-    text = en.slice(0, i);
-  } else if (phase === "HOLD_EN") {
-    text = en;
-  } else if (phase === "EN_TO_JP") {
-    text = jp.slice(0, i) + en.slice(i);
-  } else if (phase === "HOLD_JP") {
-    text = jp;
-  } else if (phase === "JP_TO_EN") {
-    text = en.slice(0, i) + jp.slice(i);
-  }
+  if (phase === "TYPE_EN") text = en.slice(0, i);
+  else if (phase === "HOLD_EN") text = en;
+  else if (phase === "EN_TO_JP") text = jp.slice(0, i) + en.slice(i);
+  else if (phase === "HOLD_JP") text = jp;
+  else if (phase === "JP_TO_EN") text = en.slice(0, i) + jp.slice(i);
 
-  // ticking speed (paused during holds)
   const delay = phase === "HOLD_EN" || phase === "HOLD_JP" ? null : stepMs;
 
-  // main loop
   useInterval(() => {
     if (phase === "TYPE_EN") {
       if (i < en.length) setI(i + 1);
@@ -205,7 +275,6 @@ const TypedTitle: React.FC<{
     } else if (phase === "JP_TO_EN") {
       if (i < maxLen) setI(i + 1);
       else {
-        // loop back
         setPhase("HOLD_EN");
         setTimeout(() => {
           setI(0);
@@ -228,17 +297,15 @@ const TypedTitle: React.FC<{
   );
 };
 
-/* ================================ Page ==================================== */
+/* ================================ Page =================================== */
 export default function SkySlide() {
   const ref = useRef<HTMLDivElement | null>(null);
 
-  // Scroll progress within this section (UNCHANGED)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
 
-  /* --------- Celestial motion (UNCHANGED) --------- */
   // Moon: down-right (sets)
   const moonX = useTransform(scrollYProgress, [0, 0.7], ["0%", "60%"]);
   const moonY = useTransform(scrollYProgress, [0, 0.7], ["0%", "50%"]);
@@ -249,14 +316,18 @@ export default function SkySlide() {
   const sunY = useTransform(scrollYProgress, [0.2, 1], ["60%", "-10%"]);
   const sunOpacity = useTransform(scrollYProgress, [0.1, 0.3, 1], [0, 0.3, 1]);
 
-  // Sun position in % for lighting center
-  const sunXPct = useTransform(scrollYProgress, [0.2, 1], [20, 70]); // %
-  const sunYPct = useTransform(scrollYProgress, [0.2, 1], [65, 25]); // %
+  // Intro text motion
+  const introX = useTransform(scrollYProgress, [0.2, 1], ["80vw", "3vw"]);
+  const introY = useTransform(scrollYProgress, [0.2, 1], ["40vh", "-40vh"]);
+  const introOpacity = useTransform(
+    scrollYProgress,
+    [0.1, 0.3, 1],
+    [0, 0.3, 1]
+  );
 
-  /* --------------------------- Atmosphere / FX (UNCHANGED) --------------------------- */
-  const starsOpacity = useTransform(scrollYProgress, [0, 0.45, 0.7], [1, 0.35, 0]);
-  const nightOpacity = useTransform(scrollYProgress, [0, 0.4, 0.8], [1, 0.7, 0.1]);
-  const dawnOverlayOpacity = useTransform(scrollYProgress, [0.3, 0.8], [0, 0.8]);
+  // Bloom follows the sun
+  const sunXPct = useTransform(scrollYProgress, [0.2, 1], [20, 70]);
+  const sunYPct = useTransform(scrollYProgress, [0.2, 1], [65, 25]);
   const lightProgress = useTransform(scrollYProgress, [0.2, 1], [0, 1]);
   const a1 = useTransform(lightProgress, (p) => p * 0.4);
   const a2 = useTransform(lightProgress, (p) => p * 0.2);
@@ -270,12 +341,27 @@ export default function SkySlide() {
     )
   `;
 
+  const starsOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.45, 0.7],
+    [1, 0.35, 0]
+  );
+  const nightOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.4, 0.8],
+    [1, 0.7, 0.1]
+  );
+  const dawnOverlayOpacity = useTransform(
+    scrollYProgress,
+    [0.3, 0.8],
+    [0, 0.8]
+  );
   const hintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
 
   return (
     <div ref={ref} className="relative h-[300vh] w-full">
-      {/* Sticky viewport (single page) */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+      {/* Sticky viewport */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden px-4 md:px-0">
         {/* Base night sky */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-t from-blue-900 via-blue-950 to-slate-950"
@@ -304,25 +390,32 @@ export default function SkySlide() {
 
         {/* Content */}
         <div className="relative h-full w-full">
-          {/* Title (looping EN ↔ JP overwrite) */}
+          {/* Title */}
           <TypedTitle
-            className="absolute top-8 left-8 z-40 text-3xl md:text-4xl text-white font-bold drop-shadow"
+            className={`${gloria.className} absolute top-8 left-4 md:left-8 z-40
+                        text-[clamp(20px,6vw,40px)] text-white font-bold drop-shadow`}
             english="Hi, I'm Kiana!"
             japanese="こんにちは、キアナです!"
             stepMs={120}
             pauseMs={1400}
             startDelayMs={0}
           />
-          <p className="absolute top-20 left-8 z-40 text-sm md:text-base text-slate-200 tracking-wide">
+          <p
+            className={`${gloria.className} absolute top-20 left-4 md:left-8 z-40
+                        text-[12px] md:text-base text-slate-200 tracking-wide`}
+          >
             Junior CS Student @ SJSU
           </p>
+
+          {/* Clouds — top-right, drifting */}
+          <Clouds />
 
           {/* Moon — down-right */}
           <motion.div
             className="absolute top-[12%] right-[12%] z-30"
             style={{ x: moonX, y: moonY, opacity: moonOpacity }}
           >
-            <Moon />
+            <Moon className="w-24 h-24 md:w-[140px] md:h-[140px]" />
           </motion.div>
 
           {/* Sun — up-right */}
@@ -330,13 +423,45 @@ export default function SkySlide() {
             className="absolute bottom-[18%] left-[10%] z-30"
             style={{ x: sunX, y: sunY, opacity: sunOpacity }}
           >
-            <Sun />
+            <Sun className="w-28 h-28 md:w-[180px] md:h-[180px]" />
+          </motion.div>
+
+          {/* Intro copy */}
+          <motion.div
+            className="absolute right-4 left-4 md:right-[10%] md:left-auto bottom-[8%] z-30"
+            style={{
+              x: introX,
+              y: introY,
+              opacity: introOpacity,
+              willChange: "transform",
+            }}
+          >
+            <span
+              className={`z-50 text-rock-100 mix-blend-difference text-sm tracking-[0.2em] uppercase drop-shadow w-2/3 block mb-4`}
+            >
+              {" "}
+              I climb rocks for fun, read like it’s a competitive sport, and
+              will 100% take apart something just to see if I can put it back
+              together better.{" "}
+            </span>{" "}
+            <span className="z-50 text-rock-300 mix-blend-difference text-sm tracking-[0.2em] uppercase drop-shadow w-2/3 block mb-4">
+              {" "}
+              I love horses, building things (digital or not), and right now I’m
+              bouldering my way up both climbing walls and new projects.{" "}
+            </span>{" "}
+            <span className="z-50 text-rock-100 mix-blend-difference text-sm tracking-[0.2em] uppercase drop-shadow w-2/3 block mb-4">
+              {" "}
+              On the more “professional” side, I spent two years helping
+              students survive calculus as an SI leader, just got picked as an
+              Adobe Student Ambassador, and transferred to SJSU with a 4.0 — so
+              yeah, I work hard, but I make it fun.{" "}
+            </span>
           </motion.div>
 
           {/* Scroll hint */}
           <motion.div
             style={{ opacity: hintOpacity }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-50"
+            className="absolute bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-50"
           >
             <motion.div
               animate={{ opacity: [0.6, 1, 0.6] }}
@@ -348,7 +473,11 @@ export default function SkySlide() {
               </span>
               <motion.div
                 animate={{ y: [0, 10, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.5,
+                  ease: "easeInOut",
+                }}
                 className="mt-2 text-blue-200 text-lg"
               >
                 ↓
