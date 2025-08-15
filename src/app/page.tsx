@@ -1,4 +1,4 @@
-import SkySlide from "@/components/SkySlide";
+import SkySlide from "@/components/sky/SkySlide";
 
 export default function Home() {
   return (
