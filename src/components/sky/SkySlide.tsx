@@ -2,6 +2,7 @@
 import React, { useRef } from "react";
 import { gloria } from "@/app/fonts";
 import { playwriteQLD } from "@/app/fonts";
+import dynamic from "next/dynamic";
 import {
   motion,
   useScroll,
@@ -22,6 +23,8 @@ export default function SkySlide() {
     target: ref,
     offset: ["start start", "end start"],
   });
+
+  const Stars = dynamic(() => import("@/components/sky/Stars"), { ssr: false });
 
   // Moon: down-right (sets)
   const moonX = useTransform(scrollYProgress, [0, 0.7], ["0%", "60%"]);
